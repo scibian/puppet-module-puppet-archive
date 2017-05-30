@@ -1,0 +1,11 @@
+puppet-module-puppet-archive (1:0.5.1-1scibian1~bpo8+1) calibre9; urgency=medium
+
+  * Imported Upstream version 1:0.5.1
+
+ -- Thomas Hamel <thomas-externe.hamel@edf.fr>  Tue, 30 May 2017 18:30:55 +0200
+
+puppet-module-puppet-archive (1.0.0-0calibre1~bpo8+1) calibre9; urgency=low
+
+  * Initial release
+
+ -- Cecile Yoshikawa <cecile.yoshikawa@edf.fr>  Thu, 11 Aug 2016 17:35:47 +0100

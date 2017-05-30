@@ -1,0 +1,4 @@
+metadata.json usr/share/puppet/modules.available/puppet-archive
+manifests     usr/share/puppet/modules.available/puppet-archive
+lib           usr/share/puppet/modules.available/puppet-archive
+files         usr/share/puppet/modules.available/puppet-archive
