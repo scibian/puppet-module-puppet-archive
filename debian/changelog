@@ -1,3 +1,9 @@
+puppet-module-puppet-archive (1:0.5.1-0sci8u1) scibian8; urgency=medium
+
+  * Scibian8 rebuild
+
+ -- Benoit Boccard <benoit-externe.boccard@edf.fr>  Wed, 13 Dec 2017 11:36:55 +0200
+
 puppet-module-puppet-archive (1:0.5.1-1scibian1~bpo8+1) calibre9; urgency=medium
 
   * Imported Upstream version 1:0.5.1
