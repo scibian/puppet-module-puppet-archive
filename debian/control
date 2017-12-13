@@ -1,10 +1,12 @@
 Source: puppet-module-puppet-archive
 Section: admin
 Priority: optional
-Maintainer: Cecile Yoshikawa <cecile.yoshikawa@edf.fr>
+Maintainer: Scibian Project <packaging@scibian.org>
 Build-Depends: debhelper (>= 9)
 Standards-Version: 3.9.5
 Homepage: https://forge.puppet.com/puppet/archive
+Vcs-Git: https://github.com/scibian/puppet-module-puppet-archive.git
+Vcs-Browser: https://github.com/scibian/puppet-module-puppet-archive
 
 Package: puppet-module-puppet-archive
 Architecture: all
