@@ -1,3 +1,9 @@
+puppet-module-puppet-archive (1:0.5.1-0sci9u1) scibian9; urgency=medium
+
+  * Scibian9 rebuild.
+
+ -- Thomas HAMEL <thomas-externe.hamel@edf.fr>  Wed, 18 Jul 2018 11:37:13 +0200
+
 puppet-module-puppet-archive (1:0.5.1-0sci8u1) scibian8; urgency=medium
 
   * Scibian8 rebuild
