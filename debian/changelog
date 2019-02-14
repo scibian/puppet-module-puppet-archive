@@ -1,3 +1,9 @@
+puppet-module-puppet-archive (1:0.5.1-0sci8u2) scibian8; urgency=medium
+
+  * Add dependancy on puppet4 package
+
+ -- Benoit Boccard <benoit-externe.boccard@edf.fr>  Thu, 14 Feb 2019 13:32:56 +0100
+
 puppet-module-puppet-archive (1:0.5.1-0sci8u1) scibian8; urgency=medium
 
   * Scibian8 rebuild
