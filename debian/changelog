@@ -1,3 +1,11 @@
+puppet-module-puppet-archive (5.0.0-1sci9u1) scibian9; urgency=medium
+
+  [ Kwame AMEDODJI ]
+  * New upstream version 5.0.0
+  * ignore debian/files right now
+
+ -- Kwame AMEDODJI <kwame-externe.amedodji@edf.fr>  Tue, 27 Apr 2021 13:07:28 +0200
+
 puppet-module-puppet-archive (1:0.5.1-0sci9u1) scibian9; urgency=medium
 
   * Scibian9 rebuild.
