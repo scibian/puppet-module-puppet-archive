@@ -4,7 +4,7 @@ require 'tmpdir'
 RSpec.shared_examples 'an archive provider' do |provider_class|
   describe provider_class do
     let(:resource) do
-      Puppet::Type::Archive.new(:name => '/tmp/example.zip', :source => 'http://home.lan/example.zip')
+      Puppet::Type::Archive.new(name: '/tmp/example.zip', source: 'http://home.lan/example.zip')
     end
 
     let(:provider) do
@@ -13,39 +13,6 @@ RSpec.shared_examples 'an archive provider' do |provider_class|
 
     let(:zipfile) do
       File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'files', 'test.zip'))
-    end
-
-    describe '#remote_checksum' do
-      subject { provider.remote_checksum }
-      let(:url) { nil }
-      let(:remote_hash) { nil }
-      before(:each) do
-        resource[:checksum_url] = url if url
-        allow(PuppetX::Bodeco::Util).to receive(:content)
-          .with(url, any_args).and_return(remote_hash)
-      end
-      context 'unset' do
-        it { is_expected.to be_nil }
-      end
-      context 'with a url' do
-        let(:url) { 'http://example.com/checksum' }
-        context 'responds with hash' do
-          let(:remote_hash) { 'a0c38e1aeb175201b0dacd65e2f37e187657050a' }
-          it { is_expected.to eq('a0c38e1aeb175201b0dacd65e2f37e187657050a') }
-        end
-        context 'responds with hash and newline' do
-          let(:remote_hash) { "a0c38e1aeb175201b0dacd65e2f37e187657050a\n" }
-          it { is_expected.to eq('a0c38e1aeb175201b0dacd65e2f37e187657050a') }
-        end
-        context 'responds with `sha1sum README.md` output' do
-          let(:remote_hash) { "a0c38e1aeb175201b0dacd65e2f37e187657050a  README.md\n" }
-          it { is_expected.to eq('a0c38e1aeb175201b0dacd65e2f37e187657050a') }
-        end
-        context 'responds with `openssl dgst -hex -sha256 README.md` output' do
-          let(:remote_hash) { "SHA256(README.md)= 8fa3f0ff1f2557657e460f0f78232679380a9bcdb8670e3dcb33472123b22428\n" }
-          it { is_expected.to eq('8fa3f0ff1f2557657e460f0f78232679380a9bcdb8670e3dcb33472123b22428') }
-        end
-      end
     end
 
     it '#checksum?' do
@@ -68,6 +35,7 @@ RSpec.shared_examples 'an archive provider' do |provider_class|
     end
 
     it '#extract' do
+      skip 'jruby not supported' if defined? JRUBY_VERSION
       Dir.mktmpdir do |dir|
         resource[:path] = File.join(dir, resource[:filename])
         extracted_file = File.join(dir, 'test')
@@ -83,6 +51,7 @@ RSpec.shared_examples 'an archive provider' do |provider_class|
     end
 
     it '#extracted?' do
+      skip 'jruby not supported' if defined? JRUBY_VERSION
       Dir.mktmpdir do |dir|
         resource[:path] = File.join(dir, resource[:filename])
         extracted_file = File.join(dir, 'test')
@@ -99,6 +68,7 @@ RSpec.shared_examples 'an archive provider' do |provider_class|
     end
 
     it '#cleanup' do
+      skip 'jruby not supported' if defined? JRUBY_VERSION
       Dir.mktmpdir do |dir|
         resource[:path] = File.join(dir, resource[:filename])
         extracted_file = File.join(dir, 'test')
@@ -116,6 +86,7 @@ RSpec.shared_examples 'an archive provider' do |provider_class|
     end
 
     it '#create' do
+      skip 'jruby not supported' if defined? JRUBY_VERSION
       Dir.mktmpdir do |dir|
         resource[:path] = File.join(dir, resource[:filename])
         extracted_file = File.join(dir, 'test')
