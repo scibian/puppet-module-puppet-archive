@@ -1,25 +1,26 @@
 require 'spec_helper'
 require 'facter/archive_windir'
 
-describe 'archive_windir fact specs', :type => :fact do
+describe 'archive_windir fact specs', type: :fact do
   before { Facter.clear }
   after { Facter.clear }
+  subject { Facter.fact(:archive_windir).value }
 
   context 'RedHat' do
-    before :each do
-      Facter.fact(:osfamily).stubs(:value).returns 'RedHat'
+    before do
+      allow(Facter.fact(:osfamily)).to receive(:value).and_return('RedHat')
     end
-    it 'should be nil on RedHat' do
-      expect(Facter.fact(:archive_windir).value).to be_nil
+    it 'is nil on RedHat' do
+      is_expected.to be_nil
     end
   end
 
   context 'Windows' do
-    before :each do
-      Facter.fact(:osfamily).stubs(:value).returns 'windows'
+    before do
+      allow(Facter.fact(:osfamily)).to receive(:value).and_return('windows')
     end
-    it 'should default to C:\\staging on windows' do
-      expect(Facter.fact(:archive_windir).value).to eq('C:\\staging')
+    it 'defaults to C:\\staging on windows' do
+      is_expected.to eq('C:\\staging')
     end
   end
 end
