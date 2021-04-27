@@ -1,6 +1,7 @@
 require 'pathname'
 require 'uri'
 require 'puppet/util'
+require 'puppet/parameter/boolean'
 
 Puppet::Type.newtype(:archive) do
   @doc = 'Manage archive file download, extraction, and cleanup.'
@@ -49,7 +50,7 @@ Puppet::Type.newtype(:archive) do
     end
   end
 
-  newparam(:path, :namevar => true) do
+  newparam(:path, namevar: true) do
     desc 'namevar, archive file fully qualified file path.'
     validate do |value|
       unless Puppet::Util.absolute_path? value
@@ -76,9 +77,29 @@ Puppet::Type.newtype(:archive) do
       end
     end
   end
+  newparam(:target) do
+    desc 'target folder path to extract archive. (this parameter is for camptocamp/archive compatibility)'
+    validate do |value|
+      unless Puppet::Util.absolute_path? value
+        raise ArgumentError, "archive extract_path must be absolute: #{value}"
+      end
+    end
+    munge do |val|
+      resource[:extract_path] = val
+    end
+  end
 
   newparam(:extract_command) do
     desc "custom extraction command ('tar xvf example.tar.gz'), also support sprintf format ('tar xvf %s') which will be processed with the filename: sprintf('tar xvf %s', filename)"
+  end
+
+  newparam(:temp_dir) do
+    desc 'Specify an alternative temporary directory to use for copying files, if unset then the operating system default will be used.'
+    validate do |value|
+      unless Puppet::Util.absolute_path?(value)
+        raise ArgumentError, "Invalid temp_dir #{value}"
+      end
+    end
   end
 
   newparam(:extract_flags) do
@@ -101,11 +122,24 @@ Puppet::Type.newtype(:archive) do
   end
 
   newparam(:source) do
-    desc 'archive file source, supports http|https|ftp|file|s3 uri.'
+    desc 'archive file source, supports puppet|http|https|ftp|file|s3|gs uri.'
     validate do |value|
-      unless value =~ URI.regexp(%w(http https ftp file s3)) || Puppet::Util.absolute_path?(value)
+      unless value =~ URI.regexp(%w[puppet http https ftp file s3 gs]) || Puppet::Util.absolute_path?(value)
         raise ArgumentError, "invalid source url: #{value}"
       end
+    end
+  end
+
+  newparam(:url) do
+    desc 'archive file source, supports http|https|ftp|file uri.
+    (for camptocamp/archive compatibility)'
+    validate do |value|
+      unless value =~ URI.regexp(%w[http https file ftp])
+        raise ArgumentError, "invalid source url: #{value}"
+      end
+    end
+    munge do |val|
+      resource[:source] = val
     end
   end
 
@@ -115,17 +149,53 @@ Puppet::Type.newtype(:archive) do
 
   newparam(:checksum) do
     desc 'archive file checksum (match checksum_type).'
-    newvalues(/\b[0-9a-f]{5,128}\b/)
+    newvalues(%r{\b[0-9a-f]{5,128}\b}, :true, :false, :undef, nil, '')
+    munge do |val|
+      if val.nil? || val.empty? || val == :undef
+        :false
+      elsif [:true, :false].include? val
+        resource[:checksum_verify] = val
+      else
+        val
+      end
+    end
+  end
+  newparam(:digest_string) do
+    desc 'archive file checksum (match checksum_type)
+    (this parameter is for camptocamp/archive compatibility).'
+    newvalues(%r{\b[0-9a-f]{5,128}\b})
+    munge do |val|
+      if !val.nil? && !val.empty?
+        resource[:checksum] = val
+      else
+        val
+      end
+    end
   end
 
   newparam(:checksum_url) do
-    desc 'archive file checksum source (instead of specify checksum)'
+    desc 'archive file checksum source (instead of specifying checksum)'
+  end
+  newparam(:digest_url) do
+    desc 'archive file checksum source (instead of specifying checksum)
+    (this parameter is for camptocamp/archive compatibility)'
+    munge do |val|
+      resource[:checksum_url] = val
+    end
   end
 
   newparam(:checksum_type) do
-    desc 'archive file checksum type (none|md5|sha1|sha2|sh256|sha384|sha512).'
+    desc 'archive file checksum type (none|md5|sha1|sha2|sha256|sha384|sha512).'
     newvalues(:none, :md5, :sha1, :sha2, :sha256, :sha384, :sha512)
     defaultto(:none)
+  end
+  newparam(:digest_type) do
+    desc 'archive file checksum type (none|md5|sha1|sha2|sha256|sha384|sha512)
+    (this parameter is camptocamp/archive compatibility).'
+    newvalues(:none, :md5, :sha1, :sha2, :sha256, :sha384, :sha512)
+    munge do |val|
+      resource[:checksum_type] = val
+    end
   end
 
   newparam(:checksum_verify) do
@@ -159,22 +229,56 @@ Puppet::Type.newtype(:archive) do
     desc 'proxy address to use when accessing source'
   end
 
+  newparam(:allow_insecure, boolean: true, parent: Puppet::Parameter::Boolean) do
+    desc 'ignore HTTPS certificate errors'
+    defaultto :false
+  end
+
+  newparam(:download_options) do
+    desc 'provider download options (affects curl, wget, gs, and only s3 downloads for ruby provider)'
+
+    validate do |val|
+      unless val.is_a?(::String) || val.is_a?(::Array)
+        raise ArgumentError, "download_options should be String or Array: #{val}"
+      end
+    end
+
+    munge do |val|
+      case val
+      when ::String
+        [val]
+      else
+        val
+      end
+    end
+  end
+
   autorequire(:file) do
     [
       Pathname.new(self[:path]).parent.to_s,
       self[:extract_path],
       '/root/.aws/config',
-      '/root/.aws/credentials',
-    ]
+      '/root/.aws/credentials'
+    ].compact
   end
 
   autorequire(:exec) do
     ['install_aws_cli']
   end
 
+  autorequire(:exec) do
+    ['install_gsutil']
+  end
+
   validate do
     filepath = Pathname.new(self[:path])
     self[:filename] = filepath.basename.to_s
+    if !self[:source].nil? && !self[:url].nil? && self[:source] != self[:url]
+      raise ArgumentError, "invalid parameter: url (#{self[:url]}) and source (#{self[:source]}) are mutually exclusive."
+    end
+    if !self[:checksum_url].nil? && !self[:digest_url].nil? && self[:checksum_url] != self[:digest_url]
+      raise ArgumentError, "invalid parameter: checksum_url (#{self[:checksum_url]}) and digest_url (#{self[:digest_url]}) are mutually exclusive."
+    end
     if self[:proxy_server]
       self[:proxy_type] ||= URI(self[:proxy_server]).scheme.to_sym
     else
